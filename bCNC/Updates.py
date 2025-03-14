@@ -1,7 +1,7 @@
 # $Id: Updates.py 3349 2014-11-28 14:09:26Z bnv $
 
-# Author:   vvlachoudis@gmail.com
-# Date:     5-Apr-2007
+# Author:   bmays87@gmail.com
+# Date:     14-Mar-2025
 
 import json
 import time
@@ -31,8 +31,8 @@ from tkinter import (
 import tkExtra
 import Utils
 
-__author__ = "Vasilis Vlachoudis"
-__email__ = "vvlachoudis@gmail.com"
+__author__ = "Ben Mays" # Forked from Vasilis Vlachoudis vvlachoudis@gmail.com
+__email__ = "bmays87@gmail.com"
 
 
 # =============================================================================
@@ -159,7 +159,7 @@ class CheckUpdateDialog(Toplevel):
         h = http.HTTPSConnection("api.github.com")
         h.request(
             "GET",
-            "/repos/vlachoudis/bCNC/releases/latest",
+            "/repos/bmays87/bCNC/releases/latest",
             None,
             {"User-Agent": "bCNC"},
         )
@@ -200,7 +200,7 @@ class CheckUpdateDialog(Toplevel):
     def download(self):
         import webbrowser
 
-        webbrowser.open("https://github.com/vlachoudis/bCNC/releases/latest")
+        webbrowser.open("https://github.com/bmays87/bCNC/releases/latest")
         self.checkButton.config(background="LightGray")
 
     # ----------------------------------------------------------------------
