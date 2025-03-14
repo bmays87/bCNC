@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" type="text/css" href="pure-min.css" />
 <script type="text/javascript" src="jquery-2.1.4.min.js" ></script>
-<script type="text/javascript" src="fastclick.js"></script>
+<!--<script type="text/javascript" src="fastclick.js"></script> -->
 
 <script type="text/javascript">
 	/* set up all functions */
@@ -26,12 +26,13 @@
 			url: '/state',
 			dataType: 'json',
 			success: function(result,status,xhr) {
-				$('#state').html(result.state);
+				$('#state').text(result.state);
 				$('#state').bgColor = result.color;
-				$('#msg').html(result.msg);
-				$('#x').html(result.wx);
-				$('#y').html(result.wy);
-				$('#z').html(result.wz);
+				$('#msg').text(result.msg);
+				$('#x').text(result.wx);
+				$('#y').text(result.wy);
+				$('#z').text(result.wz);
+				$('#temperature').text(result.Temperature1)
 				//parse $G response
 				for (k=0; k<result.G.length; k++) {
 					if (WCS.indexOf(result.G[k]) > -1)
@@ -41,6 +42,7 @@
 					else if (result.G[k] == "M3")
 						$('#spindle').val("100%");
 				}
+				
 			}
 		});
 		var canvas = $("#cnc-canvas");
@@ -220,7 +222,7 @@
 	$(document).ready(function ()
 	{
 		//set up fast click to handle mobile browser delay
-		FastClick.attach(document.body);
+		//FastClick.attach(document.body);
 
 		sendGcode("$#\n$G\n");
 		getConfig();
@@ -275,9 +277,9 @@
 		display: block;
 		margin: 0 auto;
 		object-fit: scale-down;
-		//max-height: 600px;
-		//width: 100%;
-		//height: auto;
+		max-height: 600px;
+		width: 100%;
+		height: auto;
 	}
 </style>
 </head>
@@ -313,6 +315,10 @@
 
 	<div class="pure-g border">
 		<img src="/canvas" id="cnc-canvas" class="canvas" />
+	</div>
+	<div class="cooler-status">
+		<label>Temperature</label>
+		<div id="temperature"></div>
 	</div>
 
 	<br />

@@ -17,10 +17,8 @@ from Utils import prgpath
 import urllib.parse as urlparse
 import http.server as httpserver
 
-try:
-    from PIL import Image
-except ImportError:
-    Image = None
+from PIL import Image
+from liquidctl import find_liquidctl_devices
 
 __author__ = "Vasilis Vlachoudis"
 __email__ = "Vasilis.Vlachoudis@cern.ch"
@@ -29,8 +27,8 @@ HOSTNAME = "localhost"
 port = 8080
 
 httpd = None
-webpath = f"{prgpath}/pendant"
-iconpath = f"{prgpath}/icons/"
+webpath = os.path.join(prgpath, "pendant")
+iconpath = os.path.join(prgpath, "icons")
 
 
 # =============================================================================
@@ -38,9 +36,41 @@ iconpath = f"{prgpath}/icons/"
 # =============================================================================
 class Pendant(httpserver.BaseHTTPRequestHandler):
     camera = None
+    cooler = None
+
+    def get_cooler_status(self):
+        initialized = True
+        try:
+            if Pendant.cooler == None:
+                initialized = False
+                coolers = list(find_liquidctl_devices())
+                if coolers:
+                    Pendant.cooler = coolers[0]
+                else:
+                    return None
+                # Find all connected and supported devices.
+            with Pendant.cooler.connect():
+                #print(f'{cooler.description} at {cooler.bus}:{cooler.address}:')
+
+                if not initialized:
+                    # Devices should be initialized after every boot. In this example
+                    # we assume that this has not been done before.
+                    #print('- initialize')
+                    Pendant.cooler.initialize()
+                    # Print all data returned by `initialize`.
+                    #if init_status:
+                    #    for key, value, unit in init_status:
+                    #        print(f'- {key}: {value} {unit}')
+                status = Pendant.cooler.get_status()
+            #create a dictionary for the status values:
+            cooler_status = {key.replace(' ',''): f"{value} {unit}".strip() for key, value, unit in status}
+            return cooler_status
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return None
 
     # ----------------------------------------------------------------------
-    def get_file_size(fh):
+    def get_file_size(self, fh):
 	# Returns file length. 
 	# This is workaround for os.path.getsize() function - IDK why, 
 	# but it returns wrong value.
@@ -117,6 +147,11 @@ class Pendant(httpserver.BaseHTTPRequestHandler):
                 "OvSpindle",
             ]:
                 tmp[name] = CNC.vars[name]
+                
+            cooler_status = self.get_cooler_status()
+            if cooler_status:
+                tmp.update(cooler_status)
+
             contentToSend = json.dumps(tmp)
             self.do_HEAD(200, content="text/text", cl=len(contentToSend))
             self.wfile.write(contentToSend.encode())
@@ -150,14 +185,16 @@ class Pendant(httpserver.BaseHTTPRequestHandler):
                     self.do_HEAD(200, content="image/gif", cl=out.tell())
                     out.seek(0)
                     self.wfile.write(out.read())
-            except Exception:
+            except Exception as e:
+                print(str(e))
                 filename = os.path.join(iconpath, "warn.gif")
                 try:
                     f = open(filename,"rb")
                     self.do_HEAD(200, content="image/gif", cl=self.get_file_size(f))
                     self.wfile.write(f.read())
                     f.close()
-                except Exception:
+                except Exception  as e:
+                    print(f"Error: {str(e)}")
                     pass
 
         elif page == "/camera":
